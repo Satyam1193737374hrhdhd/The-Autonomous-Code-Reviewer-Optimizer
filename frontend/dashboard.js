@@ -188,7 +188,7 @@ class CodeDifferDashboard {
   // ----------------------------------------------------------------
   setupWebSocket() {
     try {
-    const ws = new WebSocket('wss://the-autonomous-code-reviewer-optimi.vercel.app/ws');
+   const ws = new WebSocket('wss://the-autonomous-code-reviewer-optimi.vercel.app/ws');
       ws.onopen = () => console.log('WebSocket connected');
       ws.onmessage = ev => {
         try {

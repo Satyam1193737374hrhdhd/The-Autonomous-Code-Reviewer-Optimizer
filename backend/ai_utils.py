@@ -1,66 +1,57 @@
-"""Utility functions for AI‑powered code optimization.
-
-Supports both OpenAI and Anthropic (Claude) APIs. The caller can simply
-await ``optimize_code`` and receive the optimized source string.
-"""
 import os
+import json
 from typing import Dict
+import google.generativeai as genai
 
-# Optional imports – defer until needed so the package works even if one SDK is missing
-_openai_client = None
-_anthropic_client = None
-
-def _load_openai():
-    global _openai_client
-    if _openai_client is None:
-        try:
-            import openai
-            _openai_client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-        except Exception as e:
-            raise RuntimeError("OpenAI SDK not available or API key missing") from e
-    return _openai_client
-
-def _load_anthropic():
-    global _anthropic_client
-    if _anthropic_client is None:
-        try:
-            import anthropic
-            _anthropic_client = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
-        except Exception as e:
-            raise RuntimeError("Anthropic SDK not available or API key missing") from e
-    return _anthropic_client
+# Configure the Gemini SDK using the environment variable on Vercel
+api_key = os.getenv("GEMINI_API_KEY")
+if api_key:
+    genai.configure(api_key=api_key)
 
 def optimize_code(code: str, language: str = "python") -> Dict:
-    """Ask the available LLM to rewrite *code*.
-
-    Returns a dict with ``engine`` (``"openai"`` or ``"anthropic"``) and
-    ``optimized`` containing the new source.
     """
-    # Prefer Claude if its key is set, otherwise fall back to OpenAI
-    if os.getenv("ANTHROPIC_API_KEY"):
-        client = _load_anthropic()
-        # Anthropic's ``messages`` endpoint works like ChatGPT but with a different payload
-        response = client.messages.create(
-            model="claude-3-sonnet-20240229",
-            max_tokens=2000,
-            temperature=0.0,
-            system="You are a code‑optimization expert. Return only the revised code, no explanations.",
-            messages=[
-                {"role": "user", "content": f"Optimize this {language} code and keep the same functionality:\n```{language}\n{code}\n```"}
-            ]
-        )
-        optimized = response.content[0].text if response.content else ""
-        return {"engine": "anthropic", "optimized": optimized.strip()}
+    Sends the code snippet to Gemini to analyze performance, 
+    security vulnerabilities, and structural improvements.
+    """
+    if not api_key:
+        return {"engine": "none", "error": "Gemini API key missing in environment variables."}
 
-    # Fallback to OpenAI
-    client = _load_openai()
-    response = client.chat.completions.create(
-        model="gpt-4o-mini",
-        temperature=0.0,
-        messages=[
-            {"role": "system", "content": "You are a code‑optimization assistant. Return only the revised code, no extra commentary."},
-            {"role": "user", "content": f"Optimize the following {language} code while preserving behavior:\n```{language}\n{code}\n```"}
-        ]
-    )
-    optimized = response.choices[0].message.content
-    return {"engine": "openai", "optimized": optimized.strip()}
+    # Construct a strict prompt requesting a clean JSON output matching your frontend structure
+    prompt = f"""
+    Analyze the following {language} code snippet. 
+    Provide optimizations, identify structural issues, and note security risks.
+    
+    You MUST respond with a valid, raw JSON object exactly following this schema:
+    {{
+        "optimized": "The fully optimized and clean rewrite of the code string",
+        "issues": ["List of distinct problems found"],
+        "suggestions": ["List of actionable cleanup/refactoring advice"],
+        "security_risks": ["List of security vulnerabilities found, or empty if none"],
+        "engine": "gemini-1.5-flash"
+    }}
+
+    Code to analyze:
+    {code}
+    """
+
+    try:
+        # Use the highly efficient flash model
+        model = genai.GenerativeModel("gemini-1.5-flash")
+        response = model.generate_content(prompt)
+        
+        # Clean up code blocks if the model wraps the JSON response in ```json ... ```
+        text_response = response.text.strip()
+        if text_response.startswith("```json"):
+            text_response = text_response.split("```json")[1].split("```")[0].strip()
+        elif text_response.startswith("```"):
+            text_response = text_response.split("```")[1].split("```")[0].strip()
+
+        # Parse and return the direct dictionary structure
+        data = json.loads(text_response)
+        return data
+
+    except Exception as e:
+        return {
+            "engine": "none",
+            "error": f"Gemini API execution failed: {str(e)}"
+        }

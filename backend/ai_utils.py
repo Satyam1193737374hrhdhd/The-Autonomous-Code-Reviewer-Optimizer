@@ -34,19 +34,17 @@ def optimize_code(code: str, language: str = "python") -> Dict:
     {code}
     """
 
-    try:
-        # Pass the clean model string name directly
-       model = genai.GenerativeModel("models/gemini-1.5-flash")
+   try:
+        # Enforce exactly 8 spaces of indentation inside the try block
+        model = genai.GenerativeModel("models/gemini-1.5-flash")
         response = model.generate_content(prompt)
         
-        # Clean up code blocks if the model wraps the JSON response in ```json ... ```
         text_response = response.text.strip()
         if text_response.startswith("```json"):
             text_response = text_response.split("```json")[1].split("```")[0].strip()
         elif text_response.startswith("```"):
             text_response = text_response.split("```")[1].split("```")[0].strip()
 
-        # Parse and return the direct dictionary structure
         data = json.loads(text_response)
         return data
 

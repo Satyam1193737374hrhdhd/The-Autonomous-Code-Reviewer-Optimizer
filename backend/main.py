@@ -133,7 +133,7 @@ async def run_analysis(request: AnalysisRequest) -> AnalysisResponse:
 
     # 3️⃣ AI optimisation (fallback to original code on failure)
     try:
-        ai_result = await optimize_code(code, language)
+        ai_result = optimize_code(code, language)
         optimized = ai_result.get("optimized", code)
     except Exception as e:
         ai_result = {"engine": "none", "error": str(e)}

@@ -30,7 +30,7 @@ def _load_anthropic():
             raise RuntimeError("Anthropic SDK not available or API key missing") from e
     return _anthropic_client
 
-async def optimize_code(code: str, language: str = "python") -> Dict:
+def optimize_code(code: str, language: str = "python") -> Dict:
     """Ask the available LLM to rewrite *code*.
 
     Returns a dict with ``engine`` (``"openai"`` or ``"anthropic"``) and

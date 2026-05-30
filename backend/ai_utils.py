@@ -36,7 +36,7 @@ def optimize_code(code: str, language: str = "python") -> Dict:
 
     try:
         # Use the highly efficient flash model
-        model = genai.GenerativeModel("gemini-1.5-flash")
+        model = genai.GenerativeModel("models/gemini-1.5-flash")
         response = model.generate_content(prompt)
         
         # Clean up code blocks if the model wraps the JSON response in ```json ... ```

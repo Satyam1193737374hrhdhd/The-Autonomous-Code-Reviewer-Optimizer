@@ -82,7 +82,7 @@ class CodeDifferDashboard {
     if (!code) { alert('Please paste code or select a file.'); return; }
     this.setState({ loading: true, analysis: null });
     try {
-      const response = await fetch('http://localhost:8000/analyze', {
+     const response = await fetch('https://the-autonomous-code-reviewer-optimi.vercel.app/analyze', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ code, language: 'python' }) // language could be inferred later
@@ -104,7 +104,7 @@ class CodeDifferDashboard {
     const form = new FormData();
     form.append('file', file);
     try {
-      const response = await fetch('http://localhost:8000/analyze-file', {
+     const response = await fetch('https://the-autonomous-code-reviewer-optimi.vercel.app/analyze-file', {
         method: 'POST',
         body: form
       });

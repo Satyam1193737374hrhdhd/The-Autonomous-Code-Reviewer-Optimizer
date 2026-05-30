@@ -21,7 +21,7 @@ from pydantic import BaseModel
 from starlette.websockets import WebSocketDisconnect
 
 # Local utilities
-from .ai_utils import optimize_code
+from ai_utils import optimize_code
 
 # -------------------------------------------------
 # Rate limiting (very simple, per‑process)

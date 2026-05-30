@@ -34,7 +34,7 @@ def optimize_code(code: str, language: str = "python") -> Dict:
     {code}
     """
 
-   try:
+    try:
         # Pass the clean model string name directly
         model = genai.GenerativeModel("gemini-1.5-flash")
         response = model.generate_content(prompt)
